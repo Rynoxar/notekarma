@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NoteKarma</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=DM+Sans:wght@400;500;700&display=swap">
+<style>
+:root{--bg:#EAF0F6;--card:#fff;--ink:#16233F;--muted:#5B6B86;--line:#D5DEEA;--accent:#2F5BEA;--on-accent:#fff;--coin:#F4B400;--coin-ink:#3F2E00;--ok:#1E8E5A;--bad:#C23B3B;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0E1626;--card:#16233A;--ink:#E8EEF8;--muted:#9AA9C2;--line:#25365A;--accent:#7AA2FF;--on-accent:#0E1626}}
+:root[data-theme="dark"]{--bg:#0E1626;--card:#16233A;--ink:#E8EEF8;--muted:#9AA9C2;--line:#25365A;--accent:#7AA2FF;--on-accent:#0E1626}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 "DM Sans",system-ui,sans-serif}
+main{max-width:640px;margin:0 auto;padding:16px 16px 80px}
+h1,h2{font-family:"Bricolage Grotesque","DM Sans",sans-serif;margin:0;letter-spacing:-.02em}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0 16px}
+header h1{font-size:26px;font-weight:800}
+.who{display:flex;align-items:center;gap:8px}
+.coin{display:flex;align-items:center;gap:6px;background:var(--coin);color:var(--coin-ink);font-weight:700;border-radius:999px;padding:6px 12px;border:0;font-family:inherit;font-size:15px;cursor:pointer}
+.coin i{width:16px;height:16px;border-radius:50%;border:2px solid var(--coin-ink);display:inline-block}
+.coin.bump{animation:bump .5s}
+@keyframes bump{40%{transform:scale(1.18)}}
+.link{background:none;border:0;color:var(--muted);font:inherit;text-decoration:underline;cursor:pointer;padding:4px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px}
+label{display:block;font-weight:500;margin:10px 0 4px;font-size:14px}
+input,select,textarea{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px}
+textarea{min-height:64px;resize:vertical}
+button.btn{font:700 15px "DM Sans",sans-serif;background:var(--accent);color:var(--on-accent);border:0;border-radius:10px;padding:11px 16px;cursor:pointer}
+button.btn.alt{background:transparent;color:var(--accent);border:1.5px solid var(--accent)}
+button.btn:disabled{opacity:.5;cursor:default}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 0 14px}
+.chip{flex:none;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:6px 14px;font:500 14px "DM Sans",sans-serif;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.post{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:14px;overflow:hidden}
+.post .top{height:34px;background:repeating-linear-gradient(var(--card) 0 10px,var(--line) 10px 11px);border-bottom:2px solid hsl(var(--h) 70% 55%)}
+.post .body{padding:12px 16px 16px}
+.tag{display:inline-block;font-size:13px;font-weight:700;color:hsl(var(--h) 60% 38%);background:hsl(var(--h) 80% 92%);border-radius:6px;padding:2px 8px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .tag{color:hsl(var(--h) 80% 80%);background:hsl(var(--h) 40% 22%)}}
+.post h2{font-size:19px;font-weight:600;margin:8px 0 4px}
+.post p{margin:0 0 10px;color:var(--muted);font-size:15px}
+.meta{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.by{font-size:14px;color:var(--muted)}
+.empty{text-align:center;color:var(--muted);padding:24px 0}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;max-width:90%;display:none;z-index:9}
+.led{display:flex;justify-content:space-between;font-size:14px;padding:6px 0;border-bottom:1px solid var(--line)}
+.pos{color:var(--ok);font-weight:700}.neg{color:var(--bad);font-weight:700}
+.note{font-size:13px;color:var(--muted);margin-top:8px}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<div id="toast" role="status"></div>
+<script>
+var KEY="notekarma_v1",SUBJECTS=["C Programming","Maths","Digital Electronics","Communication Skills"],COST=2,REWARD=1,WELCOME=10,MAXB=1200000;
+var S=null,filter="All",showForm=false,showLed=false,bumpNext=false;
+function load(){try{var r=localStorage.getItem(KEY);if(r)return JSON.parse(r)}catch(e){}return null}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast("Storage full. Try a smaller PDF.")}}
+function seed(){var now=Date.now();var p=[["Riya","C Programming","Unit 3","Pointers and arrays, explained with diagrams","Handwritten notes with 12 solved examples."],["Aman","Maths","Unit 1","Matrices: rank and inverse shortcuts","Fast methods for the 5-mark questions."],["Sneha","Digital Electronics","Unit 2","K-Map solved examples","Step-by-step grouping for 3 and 4 variables."],["Karan","Communication Skills","Unit 4","Important questions and answers","Previous-year pattern, short answers."]];
+S={user:null,posts:p.map(function(x,i){return{id:"s"+i,author:x[0],subject:x[1],unit:x[2],title:x[3],desc:x[4],file:null,ts:now-i*3600000,sample:true}}),ledger:[],unlocked:{}};
+["Riya","Aman","Sneha","Karan"].forEach(function(n){S.ledger.push({u:n,d:WELCOME,why:"Welcome bonus",ts:now})});save()}
+function bal(u){return S.ledger.reduce(function(a,e){return e.u===u?a+e.d:a},0)}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function hue(s){var h=0;for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))%360;return h}
+function toast(m){var t=document.getElementById("toast");t.textContent=m;t.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(function(){t.style.display="none"},2600)}
+function join(){var n=document.getElementById("nm").value.trim();if(!n){toast("Enter your name to join.");return}
+S.user=n;if(!S.ledger.some(function(e){return e.u===n})){S.ledger.push({u:n,d:WELCOME,why:"Welcome bonus",ts:Date.now()})}save();render()}
+function switchUser(){S.user=null;showForm=false;showLed=false;save();render()}
+function submitPost(){var t=document.getElementById("pt").value.trim(),sub=document.getElementById("ps").value,un=document.getElementById("pu").value.trim(),d=document.getElementById("pd").value.trim(),f=document.getElementById("pf").files[0];
+if(!t||!f){toast("Add a title and a PDF.");return}
+if(f.size>MAXB){toast("PDF is too big for the prototype. Max 1.2 MB.");return}
+var r=new FileReader();r.onload=function(){S.posts.unshift({id:"p"+Date.now(),author:S.user,subject:sub,unit:un||"General",title:t,desc:d,file:{name:f.name,data:r.result},ts:Date.now()});save();showForm=false;toast("Posted. You earn "+REWARD+" karma when someone downloads it.");render()};r.readAsDataURL(f)}
+function download(id){var p=S.posts.filter(function(x){return x.id===id})[0],k=S.user+"|"+id,own=p.author===S.user;
+if(!own&&!S.unlocked[k]){if(bal(S.user)<COST){toast("Not enough karma. Upload notes to earn more.");return}
+S.ledger.push({u:S.user,d:-COST,why:"Downloaded: "+p.title,ts:Date.now()});S.ledger.push({u:p.author,d:REWARD,why:"Download by "+S.user+": "+p.title,ts:Date.now()});S.unlocked[k]=1;bumpNext=true;save()}
+var a=document.createElement("a");
+if(p.file){a.href=p.file.data;a.download=p.file.name}else{a.href=URL.createObjectURL(new Blob(["Sample note: "+p.title+"\n(Prototype placeholder file)"],{type:"text/plain"}));a.download=p.title+".txt"}
+document.body.appendChild(a);a.click();a.remove();toast(own?"Your own note. No karma used.":"Unlocked. "+COST+" karma used.");render()}
+function setFilter(f){filter=f;render()}
+function render(){var app=document.getElementById("app"),h="";
+if(!S.user){app.innerHTML='<header><h1>NoteKarma</h1></header><div class="panel"><h2>Join your class</h2><p style="color:var(--muted)">Share your notes. Earn karma. Unlock your classmates\' notes.</p><label for="nm">Your name</label><input id="nm" autocomplete="off" maxlength="24"><p class="note">New members start with '+WELCOME+' karma.</p><div style="margin-top:12px"><button class="btn" onclick="join()">Join</button></div></div>';return}
+var b=bal(S.user);
+h+='<header><h1>NoteKarma</h1><div class="who"><button class="coin'+(bumpNext?' bump':'')+'" onclick="showLed=!showLed;render()" aria-label="Karma history"><i></i>'+b+'</button><button class="link" onclick="switchUser()">'+esc(S.user)+' (switch)</button></div></header>';
+bumpNext=false;
+if(showLed){h+='<div class="panel"><h2 style="font-size:18px;margin-bottom:6px">Karma history</h2>';var mine=S.ledger.filter(function(e){return e.u===S.user}).slice().reverse();
+mine.forEach(function(e){h+='<div class="led"><span>'+esc(e.why)+'</span><span class="'+(e.d>0?'pos':'neg')+'">'+(e.d>0?'+':'')+e.d+'</span></div>'});h+='</div>'}
+h+='<div style="margin-bottom:14px"><button class="btn" onclick="showForm=!showForm;render()">'+(showForm?'Close':'Share your notes')+'</button></div>';
+if(showForm){h+='<div class="panel"><label for="pt">Title</label><input id="pt" maxlength="80"><label for="ps">Subject</label><select id="ps">'+SUBJECTS.map(function(s){return'<option>'+s+'</option>'}).join("")+'</select><label for="pu">Unit</label><input id="pu" placeholder="Unit 2" maxlength="20"><label for="pd">Short description</label><textarea id="pd" maxlength="200"></textarea><label for="pf">Notes (PDF, up to 1.2 MB)</label><input id="pf" type="file" accept="application/pdf"><div style="margin-top:14px"><button class="btn" onclick="submitPost()">Post notes</button></div></div>'}
+h+='<div class="chips" role="group" aria-label="Filter by subject">'+["All"].concat(SUBJECTS).map(function(s){return'<button class="chip" aria-pressed="'+(filter===s)+'" onclick="setFilter(\''+s+'\')">'+s+'</button>'}).join("")+'</div>';
+var list=S.posts.filter(function(p){return filter==="All"||p.subject===filter});
+if(!list.length)h+='<div class="empty">No notes here yet. Be the first to share.</div>';
+list.forEach(function(p){var own=p.author===S.user,got=own||S.unlocked[S.user+"|"+p.id],lbl=own?"Download (yours)":got?"Download again":"Download for "+COST+" karma";
+h+='<article class="post" style="--h:'+hue(p.subject)+'"><div class="top"></div><div class="body"><span class="tag">'+esc(p.subject)+' - '+esc(p.unit)+'</span><h2>'+esc(p.title)+'</h2><p>'+esc(p.desc)+'</p><div class="meta"><span class="by">'+esc(p.author)+(p.sample?' (sample)':'')+'</span><button class="btn'+(got?' alt':'')+'" onclick="download(\''+p.id+'\')">'+lbl+'</button></div></div></article>'});
+h+='<p class="note">Prototype: data is saved in this browser only.</p>';
+app.innerHTML=h}
+S=load();if(!S)seed();render();
+</script>
+</body>
+</html>
