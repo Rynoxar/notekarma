@@ -43,6 +43,7 @@ button.btn:disabled{opacity:.5;cursor:default}
 .post p{margin:0 0 10px;color:var(--muted);font-size:15px}
 .meta{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
 .by{font-size:14px;color:var(--muted)}
+.like{background:none;border:1px solid var(--line);color:var(--ink);border-radius:999px;padding:6px 12px;font:500 14px "DM Sans",sans-serif;cursor:pointer}.like.on{background:var(--ink);color:var(--bg)}
 .empty{text-align:center;color:var(--muted);padding:24px 0}
 #toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;max-width:90%;display:none;z-index:9}
 .led{display:flex;justify-content:space-between;font-size:14px;padding:6px 0;border-bottom:1px solid var(--line)}
@@ -54,48 +55,59 @@ button.btn:disabled{opacity:.5;cursor:default}
 <main id="app"></main>
 <div id="toast" role="status"></div>
 <script>
-var KEY="notekarma_v1",SUBJECTS=["C Programming","Maths","Digital Electronics","Communication Skills"],COST=2,REWARD=1,WELCOME=10,MAXB=1200000;
-var S=null,filter="All",showForm=false,showLed=false,bumpNext=false;
-function load(){try{var r=localStorage.getItem(KEY);if(r)return JSON.parse(r)}catch(e){}return null}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast("Storage full. Try a smaller PDF.")}}
-function seed(){var now=Date.now();var p=[["Riya","C Programming","Unit 3","Pointers and arrays, explained with diagrams","Handwritten notes with 12 solved examples."],["Aman","Maths","Unit 1","Matrices: rank and inverse shortcuts","Fast methods for the 5-mark questions."],["Sneha","Digital Electronics","Unit 2","K-Map solved examples","Step-by-step grouping for 3 and 4 variables."],["Karan","Communication Skills","Unit 4","Important questions and answers","Previous-year pattern, short answers."]];
-S={user:null,posts:p.map(function(x,i){return{id:"s"+i,author:x[0],subject:x[1],unit:x[2],title:x[3],desc:x[4],file:null,ts:now-i*3600000,sample:true}}),ledger:[],unlocked:{}};
-["Riya","Aman","Sneha","Karan"].forEach(function(n){S.ledger.push({u:n,d:WELCOME,why:"Welcome bonus",ts:now})});save()}
-function bal(u){return S.ledger.reduce(function(a,e){return e.u===u?a+e.d:a},0)}
-function esc(s){return String(s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+var URL_="https://vibqzeccymadvfdcpucb.supabase.co",KEY="sb_publishable_RdB1KJCK_8j6fhmbJa-TrA_2fDZN1Gq";
+var SUBJECTS=["C Programming","Maths","Digital Electronics","Communication Skills"],COST=2,REWARD=1,WELCOME=10,MAXB=5000000;
+var S={user:null,posts:[],likes:[],ledger:[],unlocks:[]},filter="All",showForm=false,showLed=false,showTop=false,q="",bumpNext=false,busy=false;
+function api(path,opt){opt=opt||{};opt.headers=Object.assign({apikey:KEY,"Content-Type":"application/json"},opt.headers||{});return fetch(URL_+"/rest/v1/"+path,opt).then(function(r){if(!r.ok)return r.text().then(function(t){throw new Error(t||("HTTP "+r.status))});return r.text().then(function(t){return t?JSON.parse(t):null})})}
+function loadAll(){return Promise.all([api("posts?select=*&order=created_at.desc"),api("likes?select=*"),api("ledger?select=*"),api("unlocks?select=*")]).then(function(r){S.posts=r[0]||[];S.likes=r[1]||[];S.ledger=r[2]||[];S.unlocks=r[3]||[]})}
+function bal(u){return S.ledger.reduce(function(a,e){return e.user_name===u?a+e.delta:a},0)}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
 function hue(s){var h=0;for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))%360;return h}
-function toast(m){var t=document.getElementById("toast");t.textContent=m;t.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(function(){t.style.display="none"},2600)}
+function toast(m){var t=document.getElementById("toast");t.textContent=m;t.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(function(){t.style.display="none"},3200)}
+function fail(e){busy=false;var m=String((e&&e.message)||e);toast("Error: "+m.slice(0,140));console.error(e)}
 function join(){var n=document.getElementById("nm").value.trim();if(!n){toast("Enter your name to join.");return}
-S.user=n;if(!S.ledger.some(function(e){return e.u===n})){S.ledger.push({u:n,d:WELCOME,why:"Welcome bonus",ts:Date.now()})}save();render()}
-function switchUser(){S.user=null;showForm=false;showLed=false;save();render()}
-function submitPost(){var t=document.getElementById("pt").value.trim(),sub=document.getElementById("ps").value,un=document.getElementById("pu").value.trim(),d=document.getElementById("pd").value.trim(),f=document.getElementById("pf").files[0];
+loadAll().then(function(){if(!S.ledger.some(function(e){return e.user_name===n}))return api("ledger",{method:"POST",body:JSON.stringify({user_name:n,delta:WELCOME,why:"Welcome bonus"})}).then(loadAll)}).then(function(){S.user=n;try{localStorage.setItem("nk_user",n)}catch(e){}render()}).catch(fail)}
+function switchUser(){S.user=null;showForm=false;showLed=false;showTop=false;try{localStorage.removeItem("nk_user")}catch(e){}render()}
+function submitPost(){if(busy)return;var t=document.getElementById("pt").value.trim(),sub=document.getElementById("ps").value,un=document.getElementById("pu").value.trim(),d=document.getElementById("pd").value.trim(),f=document.getElementById("pf").files[0];
 if(!t||!f){toast("Add a title and a PDF.");return}
-if(f.size>MAXB){toast("PDF is too big for the prototype. Max 1.2 MB.");return}
-var r=new FileReader();r.onload=function(){S.posts.unshift({id:"p"+Date.now(),author:S.user,subject:sub,unit:un||"General",title:t,desc:d,file:{name:f.name,data:r.result},ts:Date.now()});save();showForm=false;toast("Posted. You earn "+REWARD+" karma when someone downloads it.");render()};r.readAsDataURL(f)}
-function download(id){var p=S.posts.filter(function(x){return x.id===id})[0],k=S.user+"|"+id,own=p.author===S.user;
-if(!own&&!S.unlocked[k]){if(bal(S.user)<COST){toast("Not enough karma. Upload notes to earn more.");return}
-S.ledger.push({u:S.user,d:-COST,why:"Downloaded: "+p.title,ts:Date.now()});S.ledger.push({u:p.author,d:REWARD,why:"Download by "+S.user+": "+p.title,ts:Date.now()});S.unlocked[k]=1;bumpNext=true;save()}
-var a=document.createElement("a");
-if(p.file){a.href=p.file.data;a.download=p.file.name}else{a.href=URL.createObjectURL(new Blob(["Sample note: "+p.title+"\n(Prototype placeholder file)"],{type:"text/plain"}));a.download=p.title+".txt"}
-document.body.appendChild(a);a.click();a.remove();toast(own?"Your own note. No karma used.":"Unlocked. "+COST+" karma used.");render()}
+if(f.size>MAXB){toast("PDF is too big. Max 5 MB.");return}
+busy=true;toast("Uploading...");var path=Date.now()+"-"+f.name.replace(/[^a-zA-Z0-9._-]/g,"_");
+fetch(URL_+"/storage/v1/object/notes/"+path,{method:"POST",headers:{apikey:KEY,"Content-Type":f.type||"application/pdf"},body:f}).then(function(r){if(!r.ok)return r.text().then(function(x){throw new Error(x||("Upload failed "+r.status))})}).then(function(){return api("posts",{method:"POST",body:JSON.stringify({author:S.user,subject:sub,unit:un||"General",title:t,descr:d,file_path:path})})}).then(loadAll).then(function(){busy=false;showForm=false;toast("Posted! You earn "+REWARD+" karma per download.");render()}).catch(fail)}
+function download(id){var p=S.posts.filter(function(x){return x.id===id})[0];if(!p||busy)return;var own=p.author===S.user,got=own||S.unlocks.some(function(u){return u.user_name===S.user&&u.post_id===id});
+function keep(h,n){var a=document.createElement("a");a.href=h;a.download=n;document.body.appendChild(a);a.click();a.remove()}
+function deliver(){if(p.file_path){fetch(URL_+"/storage/v1/object/public/notes/"+p.file_path).then(function(r){if(!r.ok)throw new Error("File not found");return r.blob()}).then(function(b){keep(URL.createObjectURL(b),p.title+".pdf")}).catch(fail)}else{keep(URL.createObjectURL(new Blob(["Sample note: "+p.title+"\n(Prototype placeholder file)"],{type:"text/plain"})),p.title+".txt")}}
+if(got){toast(own?"Your own note. No karma used.":"Downloading...");deliver();return}
+if(bal(S.user)<COST){toast("Not enough karma. Upload notes to earn more.");return}
+busy=true;var rows=[{user_name:S.user,delta:-COST,why:"Downloaded: "+p.title},{user_name:p.author,delta:REWARD,why:"Download by "+S.user+": "+p.title}];
+Promise.all([api("ledger",{method:"POST",body:JSON.stringify(rows)}),api("unlocks",{method:"POST",body:JSON.stringify({user_name:S.user,post_id:id})})]).then(loadAll).then(function(){busy=false;bumpNext=true;toast("Unlocked. "+COST+" karma used.");render();deliver()}).catch(fail)}
+function like(id){var i=-1;S.likes.forEach(function(l,k){if(l.post_id===id&&l.user_name===S.user)i=k});
+if(i>-1){S.likes.splice(i,1);render();api("likes?post_id=eq."+id+"&user_name=eq."+encodeURIComponent(S.user),{method:"DELETE"}).catch(fail)}
+else{S.likes.push({post_id:id,user_name:S.user});render();api("likes",{method:"POST",body:JSON.stringify({post_id:id,user_name:S.user})}).catch(fail)}}
+function postsHTML(){var ql=q.trim().toLowerCase();var list=S.posts.filter(function(p){if(filter!=="All"&&p.subject!==filter)return false;return !ql||((p.title||"")+" "+(p.descr||"")+" "+p.author+" "+(p.unit||"")+" "+(p.subject||"")).toLowerCase().indexOf(ql)>-1});
+if(!list.length)return'<div class="empty">'+(ql?'No notes match your search.':'No notes here yet. Be the first to share.')+'</div>';
+return list.map(function(p){var own=p.author===S.user,got=own||S.unlocks.some(function(u){return u.user_name===S.user&&u.post_id===p.id}),lbl=own?"Download (yours)":got?"Download again":"Download for "+COST+" karma",ls=S.likes.filter(function(l){return l.post_id===p.id}),liked=ls.some(function(l){return l.user_name===S.user});
+return'<article class="post" style="--h:'+hue(p.subject||"")+'"><div class="top"></div><div class="body"><span class="tag">'+esc(p.subject)+' - '+esc(p.unit)+'</span><h2>'+esc(p.title)+'</h2><p>'+esc(p.descr)+'</p><div class="meta"><span class="by">'+esc(p.author)+(p.file_path?'':' (sample)')+'</span><span style="display:flex;gap:8px"><button class="like'+(liked?' on':'')+'" onclick="like(\''+p.id+'\')" aria-pressed="'+liked+'">&#9829; '+ls.length+'</button><button class="btn'+(got?' alt':'')+'" onclick="download(\''+p.id+'\')">'+lbl+'</button></span></div></div></article>'}).join("")}
+function topHTML(){var m={};S.posts.forEach(function(p){m[p.author]=m[p.author]||{n:0,k:0};m[p.author].n++});S.ledger.forEach(function(e){if(e.delta>0&&String(e.why).indexOf("Download by")===0&&m[e.user_name])m[e.user_name].k+=e.delta});
+var r=Object.keys(m).map(function(k){return{u:k,n:m[k].n,k:m[k].k}}).sort(function(a,b){return b.k-a.k||b.n-a.n}).slice(0,5);
+return'<div class="panel" id="top"><h2 style="font-size:18px;margin-bottom:6px">Top contributors</h2>'+(r.length?r.map(function(x,i){return'<div class="led"><span>'+(i+1)+'. '+esc(x.u)+'</span><span>'+x.n+' notes, '+x.k+' karma earned</span></div>'}).join(""):'<div class="empty">No posts yet.</div>')+'</div>'}
 function setFilter(f){filter=f;render()}
+function refresh(){var l=document.getElementById("list");if(l)l.innerHTML=postsHTML();var b=document.getElementById("bal");if(b)b.textContent=bal(S.user);var t=document.getElementById("top");if(t)t.outerHTML=topHTML()}
 function render(){var app=document.getElementById("app"),h="";
 if(!S.user){app.innerHTML='<header><h1>NoteKarma</h1></header><div class="panel"><h2>Join your class</h2><p style="color:var(--muted)">Share your notes. Earn karma. Unlock your classmates\' notes.</p><label for="nm">Your name</label><input id="nm" autocomplete="off" maxlength="24"><p class="note">New members start with '+WELCOME+' karma.</p><div style="margin-top:12px"><button class="btn" onclick="join()">Join</button></div></div>';return}
 var b=bal(S.user);
-h+='<header><h1>NoteKarma</h1><div class="who"><button class="coin'+(bumpNext?' bump':'')+'" onclick="showLed=!showLed;render()" aria-label="Karma history"><i></i>'+b+'</button><button class="link" onclick="switchUser()">'+esc(S.user)+' (switch)</button></div></header>';
+h+='<header><h1>NoteKarma</h1><div class="who"><button class="coin'+(bumpNext?' bump':'')+'" onclick="showLed=!showLed;render()" aria-label="Karma history"><i></i><span id="bal">'+b+'</span></button><button class="link" onclick="switchUser()">'+esc(S.user)+' (switch)</button></div></header>';
 bumpNext=false;
-if(showLed){h+='<div class="panel"><h2 style="font-size:18px;margin-bottom:6px">Karma history</h2>';var mine=S.ledger.filter(function(e){return e.u===S.user}).slice().reverse();
-mine.forEach(function(e){h+='<div class="led"><span>'+esc(e.why)+'</span><span class="'+(e.d>0?'pos':'neg')+'">'+(e.d>0?'+':'')+e.d+'</span></div>'});h+='</div>'}
-h+='<div style="margin-bottom:14px"><button class="btn" onclick="showForm=!showForm;render()">'+(showForm?'Close':'Share your notes')+'</button></div>';
-if(showForm){h+='<div class="panel"><label for="pt">Title</label><input id="pt" maxlength="80"><label for="ps">Subject</label><select id="ps">'+SUBJECTS.map(function(s){return'<option>'+s+'</option>'}).join("")+'</select><label for="pu">Unit</label><input id="pu" placeholder="Unit 2" maxlength="20"><label for="pd">Short description</label><textarea id="pd" maxlength="200"></textarea><label for="pf">Notes (PDF, up to 1.2 MB)</label><input id="pf" type="file" accept="application/pdf"><div style="margin-top:14px"><button class="btn" onclick="submitPost()">Post notes</button></div></div>'}
+if(showLed){h+='<div class="panel"><h2 style="font-size:18px;margin-bottom:6px">Karma history</h2>';S.ledger.filter(function(e){return e.user_name===S.user}).sort(function(a,b){return b.id-a.id}).forEach(function(e){h+='<div class="led"><span>'+esc(e.why)+'</span><span class="'+(e.delta>0?'pos':'neg')+'">'+(e.delta>0?'+':'')+e.delta+'</span></div>'});h+='</div>'}
+h+='<div style="margin-bottom:14px"><button class="btn" onclick="showForm=!showForm;render()">'+(showForm?'Close':'Share your notes')+'</button> <button class="btn alt" style="margin-left:8px" onclick="showTop=!showTop;render()">Top contributors</button></div>';if(showTop)h+=topHTML();
+if(showForm){h+='<div class="panel"><label for="pt">Title</label><input id="pt" maxlength="80"><label for="ps">Subject</label><select id="ps">'+SUBJECTS.map(function(s){return'<option>'+s+'</option>'}).join("")+'</select><label for="pu">Unit</label><input id="pu" placeholder="Unit 2" maxlength="20"><label for="pd">Short description</label><textarea id="pd" maxlength="200"></textarea><label for="pf">Notes (PDF, up to 5 MB)</label><input id="pf" type="file" accept="application/pdf"><div style="margin-top:14px"><button class="btn" onclick="submitPost()">Post notes</button></div></div>'}
 h+='<div class="chips" role="group" aria-label="Filter by subject">'+["All"].concat(SUBJECTS).map(function(s){return'<button class="chip" aria-pressed="'+(filter===s)+'" onclick="setFilter(\''+s+'\')">'+s+'</button>'}).join("")+'</div>';
-var list=S.posts.filter(function(p){return filter==="All"||p.subject===filter});
-if(!list.length)h+='<div class="empty">No notes here yet. Be the first to share.</div>';
-list.forEach(function(p){var own=p.author===S.user,got=own||S.unlocked[S.user+"|"+p.id],lbl=own?"Download (yours)":got?"Download again":"Download for "+COST+" karma";
-h+='<article class="post" style="--h:'+hue(p.subject)+'"><div class="top"></div><div class="body"><span class="tag">'+esc(p.subject)+' - '+esc(p.unit)+'</span><h2>'+esc(p.title)+'</h2><p>'+esc(p.desc)+'</p><div class="meta"><span class="by">'+esc(p.author)+(p.sample?' (sample)':'')+'</span><button class="btn'+(got?' alt':'')+'" onclick="download(\''+p.id+'\')">'+lbl+'</button></div></div></article>'});
-h+='<p class="note">Prototype: data is saved in this browser only.</p>';
+h+='<input id="q" type="search" placeholder="Search notes, subject or name" aria-label="Search notes" value="'+esc(q)+'" oninput="q=this.value;document.getElementById(\'list\').innerHTML=postsHTML()" style="margin-bottom:12px"><div id="list">'+postsHTML()+'</div>';
+h+='<p class="note">Live feed: everyone using this link sees the same notes.</p>';
 app.innerHTML=h}
-S=load();if(!S)seed();render();
+var stored=null;try{stored=localStorage.getItem("nk_user")}catch(e){}
+document.getElementById("app").innerHTML='<p class="empty">Loading...</p>';
+loadAll().then(function(){if(stored)S.user=stored;render()}).catch(function(e){fail(e);if(stored)S.user=stored;render()});
+setInterval(function(){if(!S.user||document.hidden||busy)return;loadAll().then(refresh).catch(function(){})},8000);
 </script>
 </body>
 </html>
