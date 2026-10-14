@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NoteKarma</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=DM+Sans:wght@400;500;700&display=swap">
+<style>
+:root{--bg:#EAF0F6;--card:#fff;--ink:#16233F;--muted:#5B6B86;--line:#D5DEEA;--accent:#2F5BEA;--on-accent:#fff;--coin:#F4B400;--coin-ink:#3F2E00;--ok:#1E8E5A;--bad:#C23B3B;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0E1626;--card:#16233A;--ink:#E8EEF8;--muted:#9AA9C2;--line:#25365A;--accent:#7AA2FF;--on-accent:#0E1626}}
+:root[data-theme="dark"]{--bg:#0E1626;--card:#16233A;--ink:#E8EEF8;--muted:#9AA9C2;--line:#25365A;--accent:#7AA2FF;--on-accent:#0E1626}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 "DM Sans",system-ui,sans-serif}
+main{max-width:640px;margin:0 auto;padding:16px 16px 80px}
+h1,h2{font-family:"Bricolage Grotesque","DM Sans",sans-serif;margin:0;letter-spacing:-.02em}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0 16px}
+header h1{font-size:26px;font-weight:800}
+.who{display:flex;align-items:center;gap:8px}
+.coin{display:flex;align-items:center;gap:6px;background:var(--coin);color:var(--coin-ink);font-weight:700;border-radius:999px;padding:6px 12px;border:0;font-family:inherit;font-size:15px;cursor:pointer}
+.coin i{width:16px;height:16px;border-radius:50%;border:2px solid var(--coin-ink);display:inline-block}
+.coin.bump{animation:bump .5s}
+@keyframes bump{40%{transform:scale(1.18)}}
+.link{background:none;border:0;color:var(--muted);font:inherit;text-decoration:underline;cursor:pointer;padding:4px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px}
+label{display:block;font-weight:500;margin:10px 0 4px;font-size:14px}
+input,select,textarea{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px}
+textarea{min-height:64px;resize:vertical}
+button.btn{font:700 15px "DM Sans",sans-serif;background:var(--accent);color:var(--on-accent);border:0;border-radius:10px;padding:11px 16px;cursor:pointer}
+button.btn.alt{background:transparent;color:var(--accent);border:1.5px solid var(--accent)}
+button.btn:disabled{opacity:.5;cursor:default}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 0 14px}
+.chip{flex:none;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:6px 14px;font:500 14px "DM Sans",sans-serif;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.post{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:14px;overflow:hidden}
+.post .top{height:34px;background:repeating-linear-gradient(var(--card) 0 10px,var(--line) 10px 11px);border-bottom:2px solid hsl(var(--h) 70% 55%)}
+.post .body{padding:12px 16px 16px}
+.tag{display:inline-block;font-size:13px;font-weight:700;color:hsl(var(--h) 60% 38%);background:hsl(var(--h) 80% 92%);border-radius:6px;padding:2px 8px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .tag{color:hsl(var(--h) 80% 80%);background:hsl(var(--h) 40% 22%)}}
+.post h2{font-size:19px;font-weight:600;margin:8px 0 4px}
+.post p{margin:0 0 10px;color:var(--muted);font-size:15px}
+.meta{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.by{font-size:14px;color:var(--muted)}
+.like{background:none;border:1px solid var(--line);color:var(--ink);border-radius:999px;padding:6px 12px;font:500 14px "DM Sans",sans-serif;cursor:pointer}.like.on{background:var(--ink);color:var(--bg)}
+.danger{background:var(--bad)!important;color:#fff!important;border:0!important}
+.post .top{height:5px;background:hsl(var(--h) 70% 55%);border:0}
+.row{margin-bottom:18px}.row h3{font-family:"Bricolage Grotesque","DM Sans",sans-serif;font-weight:800;font-size:19px;margin:0 0 8px}
+.cnt{font:500 13px "DM Sans",sans-serif;color:var(--muted);margin-left:4px}
+.strip{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x proximity;padding-bottom:8px}
+.strip .post{flex:none;width:270px;margin:0;scroll-snap-align:start}
+.pv{display:block;width:100%;height:170px;object-fit:cover;object-position:top;background:var(--line)}
+.pv.none{display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14px}
+.post .meta{flex-direction:column;align-items:flex-start}.acts{display:flex;gap:8px;flex-wrap:wrap}
+.post .btn,.post .like{padding:7px 12px;font-size:14px}.post h2{font-size:17px}
+.cm{margin-top:12px;border-top:1px solid var(--line);padding-top:8px}.ci{font-size:14px;margin-bottom:6px;color:var(--ink)}
+.cin{display:flex;gap:6px;margin-top:6px}.cin input{flex:1;min-width:0;padding:8px}
+.notice{outline:2px solid var(--coin)}.nl{font:700 12px "DM Sans",sans-serif;letter-spacing:1.5px;color:var(--muted);margin-bottom:4px}
+.empty.small{text-align:left;padding:4px 0;font-size:14px}
+.rb{font:700 11px "DM Sans",sans-serif;background:var(--line);color:var(--ink);border-radius:999px;padding:2px 8px;margin-left:4px}.rb.bad{background:var(--bad);color:#fff}
+.nav{display:flex;gap:8px;margin-bottom:12px}.nav select{flex:1;min-width:0}
+.badge{font:700 11px "DM Sans",sans-serif;padding:2px 8px;border-radius:999px;background:var(--line);color:var(--ink);margin-left:6px;vertical-align:middle}.badge.bad{background:var(--bad);color:#fff}
+.empty{text-align:center;color:var(--muted);padding:24px 0}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;max-width:90%;display:none;z-index:9}
+.led{display:flex;justify-content:space-between;font-size:14px;padding:6px 0;border-bottom:1px solid var(--line)}
+.pos{color:var(--ok);font-weight:700}.neg{color:var(--bad);font-weight:700}
+.note{font-size:13px;color:var(--muted);margin-top:8px}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body>
+<main id="app"></main>
+<div id="toast" role="status"></div>
+<script>
+var URL_="https://vibqzeccymadvfdcpucb.supabase.co",KEY="sb_publishable_RdB1KJCK_8j6fhmbJa-TrA_2fDZN1Gq";
+var sb=supabase.createClient(URL_,KEY);
+if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+var COST=2,MAXB=5000000;
+var S={me:null,prof:null,admin:false,role:"user",staff:false,posts:[],likes:[],ledger:[],unlocks:[],users:[],subjects:[],notices:[],comments:[],colleges:[],branches:[],requests:[],bookmarks:[]},filter="All",showForm=false,showLed=false,showTop=false,showAdm=false,showReq=false,showSaved=false,admView="all",q="",bumpNext=false,busy=false,open={},sig="",cid=null,bid=null;
+try{var sel=JSON.parse(localStorage.getItem("nk_sel")||"{}");cid=sel.c||null;bid=sel.b||null}catch(e){}
+function saveSel(){try{localStorage.setItem("nk_sel",JSON.stringify({c:cid,b:bid}))}catch(e){}}
+function chk(r){if(r.error)throw r.error;return r.data||[]}
+function loadAll(){var me=S.me.id;return Promise.all([sb.from("posts").select("*").order("created_at",{ascending:false}),sb.from("likes").select("*"),sb.from("ledger").select("*"),sb.from("unlocks").select("*"),sb.from("profiles").select("*"),sb.from("admins").select("email"),sb.from("subjects").select("*").order("name"),sb.from("notices").select("*").order("created_at",{ascending:false}).limit(5),sb.from("comments").select("*").order("created_at",{ascending:true}),sb.from("colleges").select("*").order("name"),sb.from("branches").select("*").order("name"),sb.from("requests").select("*").order("created_at",{ascending:false}),sb.from("bookmarks").select("*")]).then(function(r){S.posts=chk(r[0]);S.likes=chk(r[1]);S.ledger=chk(r[2]);S.unlocks=chk(r[3]);S.users=chk(r[4]);S.prof=S.users.filter(function(p){return p.id===me})[0]||null;S.admin=chk(r[5]).length>0;S.subjects=chk(r[6]);S.notices=chk(r[7]);S.comments=chk(r[8]);S.colleges=chk(r[9]);S.branches=chk(r[10]);S.requests=chk(r[11]);S.bookmarks=chk(r[12]);S.role=(S.prof&&S.prof.role)||"user";S.staff=S.admin||S.role==="manager";fixSel();sig=mksig()})}
+function fixSel(){var c0=cid,b0=bid;if(!S.colleges.some(function(c){return c.id===cid}))cid=S.colleges[0]?S.colleges[0].id:null;var bl=S.branches.filter(function(b){return b.college_id===cid});if(!bl.some(function(b){return b.id===bid}))bid=bl[0]?bl[0].id:null;if(c0!==cid||b0!==bid)saveSel()}
+function mksig(){return [S.posts.length,S.likes.length,S.comments.length,S.unlocks.length,S.notices.length,S.subjects.length,S.ledger.length,S.requests.length,S.bookmarks.length,S.colleges.length,S.branches.length].join("|")}
+function uid(){return S.me.id}
+function bal(u){return S.ledger.reduce(function(a,e){return e.user_name===u?a+e.delta:a},0)}
+function balTxt(){return S.admin?"\u221E":bal(uid())}
+function pname(p){return p.author_name||p.author}
+function myName(){var m=S.me.user_metadata||{};return m.full_name||m.name||String(S.me.email||"").split("@")[0]}
+function blocked(){return !!(S.prof&&S.prof.blocked)}
+function bPosts(){return S.posts.filter(function(p){return p.branch_id===bid})}
+function subjectNames(){var n=S.subjects.filter(function(s){return s.branch_id===bid}).map(function(s){return s.name});bPosts().forEach(function(p){if(p.subject&&n.indexOf(p.subject)<0)n.push(p.subject)});return n.sort()}
+function pubUrl(p){return sb.storage.from("notes").getPublicUrl(p).data.publicUrl}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function hue(s){var h=0;for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))%360;return h}
+function dt(x){return x?new Date(x).toLocaleDateString():"never"}
+function toast(m){var t=document.getElementById("toast");t.textContent=m;t.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(function(){t.style.display="none"},3500)}
+function fail(e){busy=false;var m=String((e&&e.message)||e);toast("Error: "+m.slice(0,140));console.error(e)}
+function done(r){if(r&&r.error)throw r.error;return r}
+function reload(msg){return loadAll().then(function(){if(msg)toast(msg);render()}).catch(fail)}
+function login(){sb.auth.signInWithOAuth({provider:"google",options:{redirectTo:location.origin+location.pathname}}).then(function(r){if(r.error)fail(r.error)})}
+function logout(){sb.auth.signOut().then(function(){S.me=null;showForm=showLed=showTop=showAdm=showReq=showSaved=false;render()})}
+function pickCollege(v){cid=v;bid=null;fixSel();saveSel();filter="All";render()}
+function pickBranch(v){bid=v;saveSel();filter="All";render()}
+function makePreview(f){return new Promise(function(res){if(!window.pdfjsLib)return res(null);var rd=new FileReader();rd.onload=function(){pdfjsLib.getDocument({data:new Uint8Array(rd.result)}).promise.then(function(pdf){return pdf.getPage(1)}).then(function(pg){var w=pg.getViewport({scale:1}).width,vp=pg.getViewport({scale:520/w}),c=document.createElement("canvas");c.width=vp.width;c.height=vp.height;return pg.render({canvasContext:c.getContext("2d"),viewport:vp}).promise.then(function(){c.toBlob(function(b){res(b)},"image/jpeg",0.72)})}).catch(function(){res(null)})};rd.onerror=function(){res(null)};rd.readAsArrayBuffer(f)})}
+function submitPost(){if(busy||blocked())return;if(!bid){toast("Pick a college and branch first.");return}var t=document.getElementById("pt").value.trim(),sub=document.getElementById("ps").value,ns=document.getElementById("pn").value.trim().replace(/\s+/g," ").slice(0,30),un=document.getElementById("pu").value.trim(),d=document.getElementById("pd").value.trim(),f=document.getElementById("pf").files[0];
+if(!t||!f){toast("Add a title and a PDF.");return}
+if(f.size>MAXB){toast("PDF is too big. Max 5 MB.");return}
+var needNew=false;if(ns){var ex=subjectNames().filter(function(x){return x.toLowerCase()===ns.toLowerCase()})[0];if(ex)sub=ex;else{sub=ns;needNew=true}}
+if(!sub){toast("Add a subject name first.");return}
+busy=true;toast("Uploading...");var base=uid()+"/",stamp=Date.now(),path=base+stamp+"-"+f.name.replace(/[^a-zA-Z0-9._-]/g,"_"),pp=base+"p-"+stamp+".jpg",blob=null;
+Promise.resolve(needNew?sb.from("subjects").insert({name:sub,branch_id:bid}):{}).then(done).then(function(){return makePreview(f)}).then(function(b){blob=b;return sb.storage.from("notes").upload(path,f,{contentType:f.type||"application/pdf"})}).then(done).then(function(){return blob?sb.storage.from("notes").upload(pp,blob,{contentType:"image/jpeg"}):null}).then(function(r){var okp=!!blob&&!(r&&r.error);return sb.from("posts").insert({author:uid(),author_name:myName(),subject:sub,unit:un||"General",title:t,descr:d,file_path:path,preview_path:okp?pp:null,branch_id:bid})}).then(done).then(loadAll).then(function(){busy=false;showForm=false;toast("Posted! You earn 1 karma per download.");render()}).catch(fail)}
+function delPost(id){var p=S.posts.filter(function(x){return x.id===id})[0];if(!p||!confirm("Delete this post?"))return;var fl=[p.file_path,p.preview_path].filter(Boolean);
+(fl.length?sb.storage.from("notes").remove(fl):Promise.resolve()).catch(function(){}).then(function(){return sb.from("posts").delete().eq("id",id)}).then(done).then(function(){return reload("Post deleted.")}).catch(fail)}
+function toggleBlock(id){var u=S.users.filter(function(x){return x.id===id})[0];if(!u)return;sb.rpc("set_blocked",{p_id:id,p_blocked:!u.blocked}).then(done).then(function(){return reload(u.blocked?"User unblocked.":"User blocked.")}).catch(fail)}
+function removeUser(id){var u=S.users.filter(function(x){return x.id===id})[0];if(!u||!confirm("Permanently remove "+(u.name||u.email)+" and ALL their notes, comments and karma? This cannot be undone."))return;sb.rpc("remove_user",{p_id:id}).then(done).then(function(){return reload("User removed permanently.")}).catch(fail)}
+function setRole(id,role){sb.rpc("set_role",{p_id:id,p_role:role}).then(done).then(function(){return reload(role==="manager"?"Made a manager.":"Manager role removed.")}).catch(fail)}
+function giveKarma(id){var n=parseInt(document.getElementById("g-"+id).value,10);if(!n){toast("Enter a karma amount (use minus to take back).");return}sb.rpc("grant_karma",{p_user:id,p_amount:n}).then(done).then(function(){return reload("Karma updated: "+(n>0?"+":"")+n)}).catch(fail)}
+function addCollege(){var n=document.getElementById("nc").value.trim().slice(0,60);if(!n){toast("Type the college name.");return}sb.from("colleges").insert({name:n}).then(done).then(function(){return reload("College added.")}).catch(fail)}
+function addBranch(){var n=document.getElementById("nb").value.trim().slice(0,40);if(!cid){toast("Add or pick a college first.");return}if(!n){toast("Type the branch name.");return}sb.from("branches").insert({college_id:cid,name:n}).then(done).then(function(){return reload("Branch added.")}).catch(fail)}
+function postNotice(){var t=document.getElementById("nt").value.trim();if(!t){toast("Write the notice first.");return}sb.from("notices").insert({body:t.slice(0,400)}).then(done).then(function(){return reload("Notice posted for all users.")}).catch(fail)}
+function delNotice(id){sb.from("notices").delete().eq("id",id).then(done).then(function(){return reload()}).catch(fail)}
+function addReq(){if(blocked()||!bid)return;var b=document.getElementById("rq").value.trim().slice(0,300);if(!b){toast("Write what notes you need.");return}sb.from("requests").insert({branch_id:bid,user_id:uid(),user_name:myName(),body:b}).then(done).then(function(){return reload("Request posted.")}).catch(fail)}
+function doneReq(id,f){sb.from("requests").update({done:f}).eq("id",id).then(done).then(function(){return reload()}).catch(fail)}
+function delReq(id){sb.from("requests").delete().eq("id",id).then(done).then(function(){return reload()}).catch(fail)}
+function isBm(id){return S.bookmarks.some(function(b){return b.post_id===id})}
+function bm(id){if(blocked())return;if(isBm(id)){S.bookmarks=S.bookmarks.filter(function(b){return b.post_id!==id});render();sb.from("bookmarks").delete().eq("post_id",id).eq("user_id",uid()).then(function(r){if(r.error)fail(r.error)})}else{S.bookmarks.push({user_id:uid(),post_id:id});render();sb.from("bookmarks").insert({user_id:uid(),post_id:id}).then(function(r){if(r.error)fail(r.error)})}}
+function toggleCm(id){open[id]=!open[id];render()}
+function addComment(id){var el=document.getElementById("ci-"+id),b=el.value.trim().slice(0,300);if(!b||blocked())return;sb.from("comments").insert({post_id:id,user_id:uid(),user_name:myName(),body:b}).then(done).then(function(){return reload()}).catch(fail)}
+function delComment(id){sb.from("comments").delete().eq("id",id).then(done).then(function(){return reload()}).catch(fail)}
+function download(id){var p=S.posts.filter(function(x){return x.id===id})[0];if(!p||busy||blocked())return;var own=p.author===uid(),got=own||S.admin||S.unlocks.some(function(u){return u.post_id===id&&u.user_name===uid()});
+function keep(h,n){var a=document.createElement("a");a.href=h;a.download=n;document.body.appendChild(a);a.click();a.remove()}
+function deliver(){if(p.file_path){fetch(pubUrl(p.file_path)).then(function(r){if(!r.ok)throw new Error("File not found");return r.blob()}).then(function(b){keep(URL.createObjectURL(b),p.title+".pdf")}).catch(fail)}else{keep(URL.createObjectURL(new Blob(["Sample note: "+p.title+"\n(Prototype placeholder file)"],{type:"text/plain"})),p.title+".txt")}}
+if(got){toast(own?"Your own note. No karma used.":S.admin?"CEO access. No karma used.":"Downloading...");deliver();return}
+if(bal(uid())<COST){toast("Not enough karma. Upload notes to earn more.");return}
+busy=true;sb.rpc("unlock_post",{p_post:id}).then(done).then(loadAll).then(function(){busy=false;bumpNext=true;toast("Unlocked. "+COST+" karma used.");render();deliver()}).catch(fail)}
+function like(id){if(blocked())return;var i=-1;S.likes.forEach(function(l,k){if(l.post_id===id&&l.user_name===uid())i=k});
+if(i>-1){S.likes.splice(i,1);render();sb.from("likes").delete().eq("post_id",id).eq("user_name",uid()).then(function(r){if(r.error)fail(r.error)})}
+else{S.likes.push({post_id:id,user_name:uid()});render();sb.from("likes").insert({post_id:id,user_name:uid()}).then(function(r){if(r.error)fail(r.error)})}}
+function cmHTML(p){var cs=S.comments.filter(function(c){return c.post_id===p.id});return'<div class="cm">'+cs.map(function(c){return'<div class="ci"><b>'+esc(c.user_name)+':</b> '+esc(c.body)+((S.admin||c.user_id===uid())?' <button class="link" onclick="delComment(\''+c.id+'\')" aria-label="Delete comment">x</button>':'')+'</div>'}).join("")+'<div class="cin"><input id="ci-'+p.id+'" placeholder="Write a comment" maxlength="300"><button class="btn" onclick="addComment(\''+p.id+'\')">Send</button></div></div>'}
+function cardHTML(p){var own=p.author===uid(),got=own||S.admin||S.unlocks.some(function(u){return u.post_id===p.id&&u.user_name===uid()}),lbl=own?"Download (yours)":S.admin?"Download (CEO)":got?"Download again":"Download for "+COST+" karma",ls=S.likes.filter(function(l){return l.post_id===p.id}),liked=ls.some(function(l){return l.user_name===uid()}),nc=S.comments.filter(function(c){return c.post_id===p.id}).length,op=!!open[p.id],sv=isBm(p.id);
+var img=p.preview_path?'<img class="pv" loading="lazy" src="'+esc(pubUrl(p.preview_path))+'" alt="Preview of the first page">':'<div class="pv none">No preview</div>';
+return'<article class="post" style="--h:'+hue(p.subject||"")+'"><div class="top"></div>'+img+'<div class="body"><span class="tag">'+esc(p.subject)+' - '+esc(p.unit)+'</span><h2>'+esc(p.title)+'</h2><p>'+esc(p.descr)+'</p><div class="meta"><span class="by">'+esc(pname(p))+(p.file_path?'':' (sample)')+'</span><span class="acts"><button class="like'+(liked?' on':'')+'" onclick="like(\''+p.id+'\')" aria-pressed="'+liked+'">&#9829; '+ls.length+'</button><button class="like'+(sv?' on':'')+'" onclick="bm(\''+p.id+'\')" aria-pressed="'+sv+'">'+(sv?'Saved':'Save')+'</button><button class="like'+(op?' on':'')+'" onclick="toggleCm(\''+p.id+'\')" aria-expanded="'+op+'">Comments '+nc+'</button><button class="btn'+(got?' alt':'')+'" onclick="download(\''+p.id+'\')">'+lbl+'</button>'+((S.admin||own)?'<button class="btn danger" onclick="delPost(\''+p.id+'\')">Delete</button>':'')+'</span></div>'+(op?cmHTML(p):'')+'</div></article>'}
+function postsHTML(){var ql=q.trim().toLowerCase(),shown=0,h="";
+function hit(p){return !ql||((p.title||"")+" "+(p.descr||"")+" "+pname(p)+" "+(p.unit||"")+" "+(p.subject||"")).toLowerCase().indexOf(ql)>-1}
+if(showSaved){var sv=S.posts.filter(function(p){return isBm(p.id)&&hit(p)});return'<section class="row"><h3>Saved notes <span class="cnt">'+sv.length+'</span></h3>'+(sv.length?'<div class="strip">'+sv.map(cardHTML).join("")+'</div>':'<div class="empty small">Nothing saved yet. Tap Save on any note to find it quickly before exams.</div>')+'</section>'}
+if(!bid)return'<div class="empty">'+(S.staff?'No college or branch yet. Add one in the '+(S.admin?'CEO':'Manager')+' panel.':'No college or branch is set up yet. Please ask the admin.')+'</div>';
+subjectNames().forEach(function(s){if(filter!=="All"&&filter!==s)return;var ps=bPosts().filter(function(p){return p.subject===s&&hit(p)});if(ql&&!ps.length)return;shown++;h+='<section class="row"><h3>'+esc(s)+' <span class="cnt">'+ps.length+'</span></h3>'+(ps.length?'<div class="strip">'+ps.map(cardHTML).join("")+'</div>':'<div class="empty small">No notes yet in this subject.</div>')+'</section>'});
+return shown?h:'<div class="empty">'+(ql?'No notes match your search.':'No subjects yet in this branch. Share your notes and add a subject.')+'</div>'}
+function noticesHTML(){return S.notices.map(function(n){return'<div class="panel notice"><div class="nl">NOTICE</div><div>'+esc(n.body)+'</div><div class="note">'+esc(dt(n.created_at))+(S.admin?' <button class="link" onclick="delNotice(\''+n.id+'\')">remove</button>':'')+'</div></div>'}).join("")}
+function topHTML(){var m={};bPosts().forEach(function(p){var k=p.author;m[k]=m[k]||{u:pname(p),n:0,k:0};m[k].n++});S.ledger.forEach(function(e){if(e.delta>0&&String(e.why).indexOf("Your note")===0&&m[e.user_name])m[e.user_name].k+=e.delta});
+var r=Object.keys(m).map(function(k){return m[k]}).sort(function(a,b){return b.k-a.k||b.n-a.n}).slice(0,5);
+return'<div class="panel" id="top"><h2 style="font-size:18px;margin-bottom:6px">Top contributors</h2>'+(r.length?r.map(function(x,i){return'<div class="led"><span>'+(i+1)+'. '+esc(x.u)+'</span><span>'+x.n+' notes, '+x.k+' karma earned</span></div>'}).join(""):'<div class="empty">No posts yet.</div>')+'</div>'}
+function reqHTML(){var rs=S.requests.filter(function(r){return r.branch_id===bid});return'<div class="panel"><h2 style="font-size:18px;margin-bottom:4px">Note requests</h2><p class="note" style="margin:0 0 8px">Ask classmates in this branch for notes you need.</p><textarea id="rq" maxlength="300" placeholder="Example: Need Unit 3 Maths solved examples"></textarea><div style="margin:8px 0 12px"><button class="btn" onclick="addReq()">Post request</button></div>'+(rs.length?rs.map(function(r){var mine=r.user_id===uid();return'<div class="led" style="flex-wrap:wrap;gap:6px"><span style="flex:1 1 100%">'+(r.done?'<s>':'')+esc(r.body)+(r.done?'</s>':'')+'<br><small style="color:var(--muted)">'+esc(r.user_name)+' | '+esc(dt(r.created_at))+(r.done?' | fulfilled':'')+'</small></span>'+((mine||S.staff)?'<span style="display:flex;gap:6px"><button class="btn alt" onclick="doneReq(\''+r.id+'\','+(!r.done)+')">'+(r.done?'Reopen':'Mark done')+'</button><button class="btn danger" onclick="delReq(\''+r.id+'\')">Delete</button></span>':'')+'</div>'}).join(""):'<div class="empty small">No requests yet.</div>')+'</div>'}
+function actOf(u){var id=u.id;return{posts:S.posts.filter(function(p){return p.author===id}).length,dl:S.unlocks.filter(function(x){return x.user_name===id}).length,cm:S.comments.filter(function(c){return c.user_id===id}).length,lk:S.likes.filter(function(l){return l.user_name===id}).length,rq:S.requests.filter(function(r){return r.user_id===id}).length}}
+function admHTML(){var rows=S.users.map(function(u){var a=actOf(u);a.total=a.posts+a.dl+a.cm+a.lk+a.rq;return{u:u,a:a}});var inactive=rows.filter(function(x){return x.a.total===0}).length;
+if(admView==="inactive")rows=rows.filter(function(x){return x.a.total===0});
+var h='<div class="panel"><h2 style="font-size:18px;margin-bottom:4px">'+(S.admin?'CEO panel':'Manager panel')+'</h2><label for="nc">Add a college</label><div class="cin"><input id="nc" maxlength="60" placeholder="College name"><button class="btn" onclick="addCollege()">Add</button></div><label for="nb">Add a branch to the selected college</label><div class="cin"><input id="nb" maxlength="40" placeholder="Example: BCA, BBA, B.Tech"><button class="btn" onclick="addBranch()">Add</button></div>';
+if(S.admin)h+='<label for="nt">Post a notice for all users</label><textarea id="nt" maxlength="400"></textarea><div style="margin-top:8px"><button class="btn" onclick="postNotice()">Post notice</button></div>';
+h+='<p class="note" style="margin:16px 0 6px">'+S.users.length+' members | '+inactive+' inactive (no activity yet) | '+S.posts.length+' notes</p><div style="display:flex;gap:6px;margin-bottom:6px"><button class="chip" aria-pressed="'+(admView==="all")+'" onclick="admView=\'all\';render()">All members</button><button class="chip" aria-pressed="'+(admView==="inactive")+'" onclick="admView=\'inactive\';render()">Inactive only</button></div>';
+h+=rows.map(function(x){var u=x.u,a=x.a,self=u.id===uid(),isMgr=u.role==="manager",lock=isMgr&&!S.admin;return'<div class="led" style="flex-wrap:wrap;gap:8px"><span style="flex:1 1 100%">'+esc(u.name||"")+(isMgr?'<span class="badge">Manager</span>':'')+(u.blocked?'<span class="badge bad">Blocked</span>':'')+(a.total===0?'<span class="badge bad">Inactive</span>':'')+'<br><small style="color:var(--muted)">'+esc(u.email)+' | '+bal(u.id)+' karma<br>Joined '+esc(dt(u.created_at))+' | Last seen '+esc(dt(u.last_seen))+'<br>'+a.posts+' notes, '+a.dl+' downloads, '+a.cm+' comments, '+a.lk+' likes, '+a.rq+' requests</small></span>'+(self?'<span class="note">You</span>':lock?'<span class="note">Manager (only CEO can change)</span>':'<span style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">'+(S.admin?'<input id="g-'+u.id+'" type="number" placeholder="Karma" aria-label="Karma amount" style="width:90px"><button class="btn alt" onclick="giveKarma(\''+u.id+'\')">Give</button><button class="btn alt" onclick="setRole(\''+u.id+'\',\''+(isMgr?'user':'manager')+'\')">'+(isMgr?'Remove manager':'Make manager')+'</button>':'')+'<button class="btn'+(u.blocked?' alt':' danger')+'" onclick="toggleBlock(\''+u.id+'\')">'+(u.blocked?'Unblock':'Block')+'</button><button class="btn danger" onclick="removeUser(\''+u.id+'\')">Remove</button></span>')+'</div>'}).join("");
+return h+'</div>'}
+function setFilter(f){filter=f;render()}
+function keepScroll(fn){var sx=[].map.call(document.querySelectorAll(".strip"),function(s){return s.scrollLeft}),sy=window.scrollY;fn();[].forEach.call(document.querySelectorAll(".strip"),function(s,i){s.scrollLeft=sx[i]||0});window.scrollTo(0,sy)}
+function refresh(){var a=document.activeElement;if(a&&a.closest&&a.closest("#list"))return;var b=document.getElementById("bal");if(b)b.textContent=balTxt();var n=document.getElementById("notices");if(n)n.innerHTML=noticesHTML();var l=document.getElementById("list");if(l&&sig!==refresh.last){refresh.last=sig;keepScroll(function(){l.innerHTML=postsHTML()})}var t=document.getElementById("top");if(t)t.outerHTML=topHTML()}
+function render(){keepScroll(draw);refresh.last=sig}
+function draw(){var app=document.getElementById("app"),h="";
+if(!S.me){app.innerHTML='<header><h1>NoteKarma</h1></header><div class="panel"><h2>Join your class</h2><p style="color:var(--muted)">Share your notes. Earn karma. Unlock your classmates\' notes.</p><p class="note">Sign in with your Gmail. One account per person, and new members start with 10 karma.</p><div style="margin-top:12px"><button class="btn" onclick="login()">Continue with Google</button></div></div>';return}
+h+='<header><h1>NoteKarma</h1><div class="who"><button class="coin'+(bumpNext?' bump':'')+'" onclick="showLed=!showLed;render()" aria-label="Karma history"><i></i><span id="bal">'+balTxt()+'</span></button><button class="link" onclick="logout()">'+esc(myName())+(S.admin?' (CEO)':S.role==="manager"?' (Manager)':'')+' (sign out)</button></div></header>';
+bumpNext=false;
+if(blocked()){app.innerHTML=h+'<div class="panel"><h2>Account blocked</h2><p style="color:var(--muted)">The admin has blocked this account, so you can not post, like, comment or download.</p></div>';return}
+h+='<div id="notices">'+noticesHTML()+'</div>';
+if(showLed){h+='<div class="panel"><h2 style="font-size:18px;margin-bottom:6px">Karma history</h2>';S.ledger.filter(function(e){return e.user_name===uid()}).sort(function(a,b){return b.id-a.id}).forEach(function(e){h+='<div class="led"><span>'+esc(e.why)+'</span><span class="'+(e.delta>0?'pos':'neg')+'">'+(e.delta>0?'+':'')+e.delta+'</span></div>'});h+='</div>'}
+var bl=S.branches.filter(function(b){return b.college_id===cid});
+h+='<div class="nav"><select id="sc" aria-label="College" onchange="pickCollege(this.value)">'+(S.colleges.length?S.colleges.map(function(c){return'<option value="'+c.id+'"'+(c.id===cid?' selected':'')+'>'+esc(c.name)+'</option>'}).join(""):'<option>No college yet</option>')+'</select><select id="sbr" aria-label="Branch" onchange="pickBranch(this.value)">'+(bl.length?bl.map(function(b){return'<option value="'+b.id+'"'+(b.id===bid?' selected':'')+'>'+esc(b.name)+'</option>'}).join(""):'<option>No branch yet</option>')+'</select></div>';
+h+='<div style="margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="showForm=!showForm;render()">'+(showForm?'Close':'Share your notes')+'</button><button class="btn alt" onclick="showReq=!showReq;render()">Requests</button><button class="btn alt" onclick="showSaved=!showSaved;render()" aria-pressed="'+showSaved+'">'+(showSaved?'Back to feed':'My saved ('+S.bookmarks.length+')')+'</button><button class="btn alt" onclick="showTop=!showTop;render()">Top contributors</button>'+(S.staff?'<button class="btn alt" onclick="showAdm=!showAdm;render()">'+(S.admin?'CEO panel':'Manager panel')+'</button>':'')+'</div>';
+if(showAdm&&S.staff)h+=admHTML();if(showReq)h+=reqHTML();if(showTop)h+=topHTML();
+var names=subjectNames();
+if(showForm){h+='<div class="panel"><label for="pt">Title</label><input id="pt" maxlength="80"><label for="ps">Subject</label><select id="ps">'+names.map(function(s){return'<option>'+esc(s)+'</option>'}).join("")+'</select><label for="pn">Or add a new subject</label><input id="pn" placeholder="Type a new subject name" maxlength="30"><label for="pu">Unit</label><input id="pu" placeholder="Unit 2" maxlength="20"><label for="pd">Short description</label><textarea id="pd" maxlength="200"></textarea><label for="pf">Notes (PDF, up to 5 MB)</label><input id="pf" type="file" accept="application/pdf"><p class="note">Posting to the selected college and branch. Viewers see a preview of your first page before downloading.</p><div style="margin-top:14px"><button class="btn" onclick="submitPost()">Post notes</button></div></div>'}
+if(!showSaved)h+='<div class="chips" role="group" aria-label="Filter by subject">'+["All"].concat(names).map(function(s){return'<button class="chip" aria-pressed="'+(filter===s)+'" data-s="'+esc(s)+'" onclick="setFilter(this.dataset.s)">'+esc(s)+'</button>'}).join("")+'</div>';
+h+='<input id="q" type="search" placeholder="Search notes, subject or name" aria-label="Search notes" value="'+esc(q)+'" oninput="q=this.value;document.getElementById(\'list\').innerHTML=postsHTML()" style="margin-bottom:12px"><div id="list">'+postsHTML()+'</div>';
+h+='<p class="note">Live feed: everyone using this link sees the same notes.</p>';
+app.innerHTML=h}
+document.getElementById("app").innerHTML='<p class="empty">Loading...</p>';
+sb.auth.getSession().then(function(r){var s=r.data&&r.data.session;if(s){S.me=s.user;return loadAll().then(function(){sb.rpc("touch").then(function(){})})}}).then(render).catch(function(e){fail(e);render()});
+sb.auth.onAuthStateChange(function(ev){if(ev==="SIGNED_OUT"){S.me=null;render()}});
+setInterval(function(){if(!S.me||document.hidden||busy)return;loadAll().then(refresh).catch(function(){})},8000);
+</script>
+</body>
+</html>
