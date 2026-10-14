@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NoteKarma</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=DM+Sans:wght@400;500;700&display=swap">
+<style>
+:root{--bg:#EAF0F6;--card:#fff;--ink:#16233F;--muted:#5B6B86;--line:#D5DEEA;--accent:#2F5BEA;--on-accent:#fff;--coin:#F4B400;--coin-ink:#3F2E00;--ok:#1E8E5A;--bad:#C23B3B;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0E1626;--card:#16233A;--ink:#E8EEF8;--muted:#9AA9C2;--line:#25365A;--accent:#7AA2FF;--on-accent:#0E1626}}
+:root[data-theme="dark"]{--bg:#0E1626;--card:#16233A;--ink:#E8EEF8;--muted:#9AA9C2;--line:#25365A;--accent:#7AA2FF;--on-accent:#0E1626}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 "DM Sans",system-ui,sans-serif}
+main{max-width:640px;margin:0 auto;padding:16px 16px 80px}
+h1,h2{font-family:"Bricolage Grotesque","DM Sans",sans-serif;margin:0;letter-spacing:-.02em}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0 16px}
+header h1{font-size:26px;font-weight:800}
+.who{display:flex;align-items:center;gap:8px}
+.coin{display:flex;align-items:center;gap:6px;background:var(--coin);color:var(--coin-ink);font-weight:700;border-radius:999px;padding:6px 12px;border:0;font-family:inherit;font-size:15px;cursor:pointer}
+.coin i{width:16px;height:16px;border-radius:50%;border:2px solid var(--coin-ink);display:inline-block}
+.coin.bump{animation:bump .5s}
+@keyframes bump{40%{transform:scale(1.18)}}
+.link{background:none;border:0;color:var(--muted);font:inherit;text-decoration:underline;cursor:pointer;padding:4px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px}
+label{display:block;font-weight:500;margin:10px 0 4px;font-size:14px}
+input,select,textarea{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px}
+textarea{min-height:64px;resize:vertical}
+button.btn{font:700 15px "DM Sans",sans-serif;background:var(--accent);color:var(--on-accent);border:0;border-radius:10px;padding:11px 16px;cursor:pointer}
+button.btn.alt{background:transparent;color:var(--accent);border:1.5px solid var(--accent)}
+button.btn:disabled{opacity:.5;cursor:default}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 0 14px}
+.chip{flex:none;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:6px 14px;font:500 14px "DM Sans",sans-serif;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.post{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:14px;overflow:hidden}
+.post .top{height:34px;background:repeating-linear-gradient(var(--card) 0 10px,var(--line) 10px 11px);border-bottom:2px solid hsl(var(--h) 70% 55%)}
+.post .body{padding:12px 16px 16px}
+.tag{display:inline-block;font-size:13px;font-weight:700;color:hsl(var(--h) 60% 38%);background:hsl(var(--h) 80% 92%);border-radius:6px;padding:2px 8px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .tag{color:hsl(var(--h) 80% 80%);background:hsl(var(--h) 40% 22%)}}
+.post h2{font-size:19px;font-weight:600;margin:8px 0 4px}
+.post p{margin:0 0 10px;color:var(--muted);font-size:15px}
+.meta{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.by{font-size:14px;color:var(--muted)}
+.like{background:none;border:1px solid var(--line);color:var(--ink);border-radius:999px;padding:6px 12px;font:500 14px "DM Sans",sans-serif;cursor:pointer}.like.on{background:var(--ink);color:var(--bg)}
+.danger{background:var(--bad)!important;color:#fff!important;border:0!important}
+.empty{text-align:center;color:var(--muted);padding:24px 0}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;max-width:90%;display:none;z-index:9}
+.led{display:flex;justify-content:space-between;font-size:14px;padding:6px 0;border-bottom:1px solid var(--line)}
+.pos{color:var(--ok);font-weight:700}.neg{color:var(--bad);font-weight:700}
+.note{font-size:13px;color:var(--muted);margin-top:8px}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+</head>
+<body>
+<main id="app"></main>
+<div id="toast" role="status"></div>
+<script>
+var URL_="https://vibqzeccymadvfdcpucb.supabase.co",KEY="sb_publishable_RdB1KJCK_8j6fhmbJa-TrA_2fDZN1Gq";
+var sb=supabase.createClient(URL_,KEY);
+var SUBJECTS=["C Programming","Maths","Digital Electronics","Communication Skills"],COST=2,MAXB=5000000;
+var S={me:null,prof:null,admin:false,posts:[],likes:[],ledger:[],unlocks:[],users:[]},filter="All",showForm=false,showLed=false,showTop=false,showAdm=false,q="",bumpNext=false,busy=false;
+function chk(r){if(r.error)throw r.error;return r.data||[]}
+function loadAll(){var me=S.me.id;return Promise.all([sb.from("posts").select("*").order("created_at",{ascending:false}),sb.from("likes").select("*"),sb.from("ledger").select("*"),sb.from("unlocks").select("*"),sb.from("profiles").select("*"),sb.from("admins").select("email")]).then(function(r){S.posts=chk(r[0]);S.likes=chk(r[1]);S.ledger=chk(r[2]);S.unlocks=chk(r[3]);S.users=chk(r[4]);S.prof=S.users.filter(function(p){return p.id===me})[0]||null;S.admin=chk(r[5]).length>0})}
+function uid(){return S.me.id}
+function bal(u){return S.ledger.reduce(function(a,e){return e.user_name===u?a+e.delta:a},0)}
+function pname(p){return p.author_name||p.author}
+function myName(){var m=S.me.user_metadata||{};return m.full_name||m.name||String(S.me.email||"").split("@")[0]}
+function blocked(){return !!(S.prof&&S.prof.blocked)}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function hue(s){var h=0;for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))%360;return h}
+function toast(m){var t=document.getElementById("toast");t.textContent=m;t.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(function(){t.style.display="none"},3500)}
+function fail(e){busy=false;var m=String((e&&e.message)||e);toast("Error: "+m.slice(0,140));console.error(e)}
+function login(){sb.auth.signInWithOAuth({provider:"google",options:{redirectTo:location.origin+location.pathname}}).then(function(r){if(r.error)fail(r.error)})}
+function logout(){sb.auth.signOut().then(function(){S.me=null;showForm=showLed=showTop=showAdm=false;render()})}
+function submitPost(){if(busy||blocked())return;var t=document.getElementById("pt").value.trim(),sub=document.getElementById("ps").value,un=document.getElementById("pu").value.trim(),d=document.getElementById("pd").value.trim(),f=document.getElementById("pf").files[0];
+if(!t||!f){toast("Add a title and a PDF.");return}
+if(f.size>MAXB){toast("PDF is too big. Max 5 MB.");return}
+busy=true;toast("Uploading...");var path=uid()+"/"+Date.now()+"-"+f.name.replace(/[^a-zA-Z0-9._-]/g,"_");
+sb.storage.from("notes").upload(path,f,{contentType:f.type||"application/pdf"}).then(function(r){if(r.error)throw r.error;return sb.from("posts").insert({author:uid(),author_name:myName(),subject:sub,unit:un||"General",title:t,descr:d,file_path:path})}).then(function(r){if(r.error)throw r.error}).then(loadAll).then(function(){busy=false;showForm=false;toast("Posted! You earn 1 karma per download.");render()}).catch(fail)}
+function delPost(id){var p=S.posts.filter(function(x){return x.id===id})[0];if(!p||!confirm("Delete this post?"))return;
+(p.file_path?sb.storage.from("notes").remove([p.file_path]):Promise.resolve()).catch(function(){}).then(function(){return sb.from("posts").delete().eq("id",id)}).then(function(r){if(r.error)throw r.error;return loadAll()}).then(function(){toast("Post deleted.");render()}).catch(fail)}
+function toggleBlock(id){var u=S.users.filter(function(x){return x.id===id})[0];if(!u)return;
+sb.from("profiles").update({blocked:!u.blocked}).eq("id",id).then(function(r){if(r.error)throw r.error;return loadAll()}).then(function(){toast(u.blocked?"User unblocked.":"User blocked.");render()}).catch(fail)}
+function download(id){var p=S.posts.filter(function(x){return x.id===id})[0];if(!p||busy||blocked())return;var own=p.author===uid(),got=own||S.unlocks.some(function(u){return u.post_id===id});
+function keep(h,n){var a=document.createElement("a");a.href=h;a.download=n;document.body.appendChild(a);a.click();a.remove()}
+function deliver(){if(p.file_path){var u=sb.storage.from("notes").getPublicUrl(p.file_path).data.publicUrl;fetch(u).then(function(r){if(!r.ok)throw new Error("File not found");return r.blob()}).then(function(b){keep(URL.createObjectURL(b),p.title+".pdf")}).catch(fail)}else{keep(URL.createObjectURL(new Blob(["Sample note: "+p.title+"\n(Prototype placeholder file)"],{type:"text/plain"})),p.title+".txt")}}
+if(got){toast(own?"Your own note. No karma used.":"Downloading...");deliver();return}
+if(bal(uid())<COST){toast("Not enough karma. Upload notes to earn more.");return}
+busy=true;sb.rpc("unlock_post",{p_post:id}).then(function(r){if(r.error)throw r.error}).then(loadAll).then(function(){busy=false;bumpNext=true;toast("Unlocked. "+COST+" karma used.");render();deliver()}).catch(fail)}
+function like(id){if(blocked())return;var i=-1;S.likes.forEach(function(l,k){if(l.post_id===id&&l.user_name===uid())i=k});
+if(i>-1){S.likes.splice(i,1);render();sb.from("likes").delete().eq("post_id",id).eq("user_name",uid()).then(function(r){if(r.error)fail(r.error)})}
+else{S.likes.push({post_id:id,user_name:uid()});render();sb.from("likes").insert({post_id:id,user_name:uid()}).then(function(r){if(r.error)fail(r.error)})}}
+function postsHTML(){var ql=q.trim().toLowerCase();var list=S.posts.filter(function(p){if(filter!=="All"&&p.subject!==filter)return false;return !ql||((p.title||"")+" "+(p.descr||"")+" "+pname(p)+" "+(p.unit||"")+" "+(p.subject||"")).toLowerCase().indexOf(ql)>-1});
+if(!list.length)return'<div class="empty">'+(ql?'No notes match your search.':'No notes here yet. Be the first to share.')+'</div>';
+return list.map(function(p){var own=p.author===uid(),got=own||S.unlocks.some(function(u){return u.post_id===p.id}),lbl=own?"Download (yours)":got?"Download again":"Download for "+COST+" karma",ls=S.likes.filter(function(l){return l.post_id===p.id}),liked=ls.some(function(l){return l.user_name===uid()});
+return'<article class="post" style="--h:'+hue(p.subject||"")+'"><div class="top"></div><div class="body"><span class="tag">'+esc(p.subject)+' - '+esc(p.unit)+'</span><h2>'+esc(p.title)+'</h2><p>'+esc(p.descr)+'</p><div class="meta"><span class="by">'+esc(pname(p))+(p.file_path?'':' (sample)')+'</span><span style="display:flex;gap:8px;flex-wrap:wrap"><button class="like'+(liked?' on':'')+'" onclick="like(\''+p.id+'\')" aria-pressed="'+liked+'">&#9829; '+ls.length+'</button><button class="btn'+(got?' alt':'')+'" onclick="download(\''+p.id+'\')">'+lbl+'</button>'+((S.admin||own)?'<button class="btn danger" onclick="delPost(\''+p.id+'\')">Delete</button>':'')+'</span></div></div></article>'}).join("")}
+function topHTML(){var m={};S.posts.forEach(function(p){var k=p.author;m[k]=m[k]||{u:pname(p),n:0,k:0};m[k].n++});S.ledger.forEach(function(e){if(e.delta>0&&String(e.why).indexOf("Your note")===0&&m[e.user_name])m[e.user_name].k+=e.delta});
+var r=Object.keys(m).map(function(k){return m[k]}).sort(function(a,b){return b.k-a.k||b.n-a.n}).slice(0,5);
+return'<div class="panel" id="top"><h2 style="font-size:18px;margin-bottom:6px">Top contributors</h2>'+(r.length?r.map(function(x,i){return'<div class="led"><span>'+(i+1)+'. '+esc(x.u)+'</span><span>'+x.n+' notes, '+x.k+' karma earned</span></div>'}).join(""):'<div class="empty">No posts yet.</div>')+'</div>'}
+function admHTML(){return'<div class="panel"><h2 style="font-size:18px;margin-bottom:4px">CEO panel</h2><p class="note" style="margin:0 0 8px">'+S.users.length+' members, '+S.posts.length+' posts</p>'+S.users.map(function(u){var self=u.id===uid();return'<div class="led" style="align-items:center;gap:8px"><span>'+esc(u.name||"")+(u.blocked?' (blocked)':'')+'<br><small style="color:var(--muted)">'+esc(u.email)+' | '+bal(u.id)+' karma</small></span>'+(self?'<span class="note">You</span>':'<button class="btn'+(u.blocked?' alt':' danger')+'" onclick="toggleBlock(\''+u.id+'\')">'+(u.blocked?'Unblock':'Block')+'</button>')+'</div>'}).join("")+'</div>'}
+function setFilter(f){filter=f;render()}
+function refresh(){var l=document.getElementById("list");if(l)l.innerHTML=postsHTML();var b=document.getElementById("bal");if(b)b.textContent=bal(uid());var t=document.getElementById("top");if(t)t.outerHTML=topHTML()}
+function render(){var app=document.getElementById("app"),h="";
+if(!S.me){app.innerHTML='<header><h1>NoteKarma</h1></header><div class="panel"><h2>Join your class</h2><p style="color:var(--muted)">Share your notes. Earn karma. Unlock your classmates\' notes.</p><p class="note">Sign in with your Gmail. One account per person, and new members start with 10 karma.</p><div style="margin-top:12px"><button class="btn" onclick="login()">Continue with Google</button></div></div>';return}
+var b=bal(uid());
+h+='<header><h1>NoteKarma</h1><div class="who"><button class="coin'+(bumpNext?' bump':'')+'" onclick="showLed=!showLed;render()" aria-label="Karma history"><i></i><span id="bal">'+b+'</span></button><button class="link" onclick="logout()">'+esc(myName())+(S.admin?' (CEO)':'')+' (sign out)</button></div></header>';
+bumpNext=false;
+if(blocked()){app.innerHTML=h+'<div class="panel"><h2>Account blocked</h2><p style="color:var(--muted)">The admin has blocked this account, so you can not post, like or download.</p></div>';return}
+if(showLed){h+='<div class="panel"><h2 style="font-size:18px;margin-bottom:6px">Karma history</h2>';S.ledger.filter(function(e){return e.user_name===uid()}).sort(function(a,b){return b.id-a.id}).forEach(function(e){h+='<div class="led"><span>'+esc(e.why)+'</span><span class="'+(e.delta>0?'pos':'neg')+'">'+(e.delta>0?'+':'')+e.delta+'</span></div>'});h+='</div>'}
+h+='<div style="margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="showForm=!showForm;render()">'+(showForm?'Close':'Share your notes')+'</button><button class="btn alt" onclick="showTop=!showTop;render()">Top contributors</button>'+(S.admin?'<button class="btn alt" onclick="showAdm=!showAdm;render()">CEO panel</button>':'')+'</div>';
+if(showAdm&&S.admin)h+=admHTML();if(showTop)h+=topHTML();
+if(showForm){h+='<div class="panel"><label for="pt">Title</label><input id="pt" maxlength="80"><label for="ps">Subject</label><select id="ps">'+SUBJECTS.map(function(s){return'<option>'+s+'</option>'}).join("")+'</select><label for="pu">Unit</label><input id="pu" placeholder="Unit 2" maxlength="20"><label for="pd">Short description</label><textarea id="pd" maxlength="200"></textarea><label for="pf">Notes (PDF, up to 5 MB)</label><input id="pf" type="file" accept="application/pdf"><div style="margin-top:14px"><button class="btn" onclick="submitPost()">Post notes</button></div></div>'}
+h+='<div class="chips" role="group" aria-label="Filter by subject">'+["All"].concat(SUBJECTS).map(function(s){return'<button class="chip" aria-pressed="'+(filter===s)+'" onclick="setFilter(\''+s+'\')">'+s+'</button>'}).join("")+'</div>';
+h+='<input id="q" type="search" placeholder="Search notes, subject or name" aria-label="Search notes" value="'+esc(q)+'" oninput="q=this.value;document.getElementById(\'list\').innerHTML=postsHTML()" style="margin-bottom:12px"><div id="list">'+postsHTML()+'</div>';
+h+='<p class="note">Live feed: everyone using this link sees the same notes.</p>';
+app.innerHTML=h}
+document.getElementById("app").innerHTML='<p class="empty">Loading...</p>';
+sb.auth.getSession().then(function(r){var s=r.data&&r.data.session;if(s){S.me=s.user;return loadAll()}}).then(render).catch(function(e){fail(e);render()});
+sb.auth.onAuthStateChange(function(ev){if(ev==="SIGNED_OUT"){S.me=null;render()}});
+setInterval(function(){if(!S.me||document.hidden||busy)return;loadAll().then(refresh).catch(function(){})},8000);
+</script>
+</body>
+</html>
