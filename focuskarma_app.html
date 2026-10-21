@@ -126,8 +126,8 @@ function enter(x){
   if(!balAfterStake)bal().then(function(v){balAfterStake=v});
   $('lt').textContent=cur.d+' minute focus room';show('live');
   $('hint').textContent='Keep this tab open. Switching tabs after the room starts forfeits your stake.';
-  sb.rpc('room_heartbeat',{p_room:cur.id});
-  hb=setInterval(function(){sb.rpc('room_heartbeat',{p_room:cur.id})},15000);
+  var beat=function(){if(cur)sb.rpc('room_heartbeat',{p_room:cur.id}).then(function(r){if(r.error)console.log(r.error)})};
+  beat();hb=setInterval(beat,15000);
   tk=setInterval(tick,500);tick();
   try{ch=sb.channel('room:'+cur.id,{config:{presence:{key:uid}}});
     ch.on('presence',{event:'sync'},function(){$('here').textContent=Object.keys(ch.presenceState()).length+' focusing with you right now'})
