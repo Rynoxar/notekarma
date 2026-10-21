@@ -49,7 +49,7 @@ small,.mute{color:var(--mute)}
 <div id="lobby" hidden>
   <div class="card">
     <h2>Join a focus room</h2>
-    <p class="mute" style="margin:0 0 6px">Stake 10 Karma. Finish the session to get it back plus a bonus. Leave after it starts and you lose it.</p>
+    <p class="mute" style="margin:0 0 6px">Stake 5 Karma. Finish the session to get it back, plus 1 Karma for completing it (up to 3 a day) and a share of any forfeited stakes. Leave after it starts and you lose your stake.</p>
     <div id="rooms"><p class="mute">Loading rooms…</p></div>
   </div>
   <div class="card" id="mkcard" hidden>
@@ -89,7 +89,7 @@ function toast(t){var e=$('toast');e.textContent=t;e.style.display='block';setTi
 function show(id){['login','lobby','live','result'].forEach(function(x){$(x).hidden=(x!==id)})}
 function fmt(ms){var s=Math.max(0,Math.ceil(ms/1000)),m=Math.floor(s/60);s=s%60;return(m<10?'0':'')+m+':'+(s<10?'0':'')+s}
 function bal(){return sb.rpc('my_karma').then(function(r){if(!r.error)$('bal').textContent=r.data+' Karma';return r.error?0:r.data})}
-function err(e){var m={not_enough_karma:'You need at least 10 Karma to join.',already_in_a_room:'You are already in a room.',room_closed:'This room has already started.'};
+function err(e){var m={not_enough_karma:'You do not have enough Karma to join this room.',already_in_a_room:'You are already in a room.',room_closed:'This room has already started.'};
   toast(m[e.message]||e.message)}
 
 sb.auth.getSession().then(function(r){
@@ -113,7 +113,7 @@ function rooms(){
       var bt=document.createElement('button');
       if(x.joined){bt.textContent='Enter';bt.onclick=function(){enter(x)}}
       else if(started){bt.textContent='Started';bt.disabled=true}
-      else{bt.textContent='Join · 10';bt.onclick=function(){bt.disabled=true;sb.rpc('join_room',{p_room:x.id}).then(function(j){
+      else{bt.textContent='Join · '+x.stake;bt.onclick=function(){bt.disabled=true;sb.rpc('join_room',{p_room:x.id}).then(function(j){
         if(j.error){err(j.error);bt.disabled=false;return}bal().then(function(v){balAfterStake=v;enter(x)})})}}
       d.appendChild(bt);b.appendChild(d);
     });
@@ -123,7 +123,7 @@ function mk(d){sb.rpc('create_room',{p_duration:d}).then(function(r){if(r.error)
 $('mk25').onclick=function(){mk(25)};$('mk50').onclick=function(){mk(50)};$('mk1').onclick=function(){mk(1)};
 
 function enter(x){
-  cur={id:x.id,s:new Date(x.starts_at),e:new Date(x.ends_at),d:x.duration_min};
+  cur={id:x.id,s:new Date(x.starts_at),e:new Date(x.ends_at),d:x.duration_min,st:x.stake};
   if(!balAfterStake)bal().then(function(v){balAfterStake=v});
   $('lt').textContent=cur.d+' minute focus room';show('live');
   $('hint').textContent='Keep this tab open. Switching tabs after the room starts forfeits your stake.';
@@ -150,8 +150,9 @@ function settle(c,tries){
     if(r.error&&r.error.message.indexOf('room_not_ended')>-1&&tries<10){setTimeout(function(){settle(c,tries+1)},2000);return}
     if(r.error)toast(r.error.message);
     bal().then(function(v){var d=v-balAfterStake;
-      $('rt').textContent=d>=10?'Session complete':'Session ended';$('rt').className=d>=10?'win':'lose';
-      $('rm').textContent=d>=10?'You got your 10 Karma back'+(d>10?' plus '+(d-10)+' bonus Karma.':'.'):'Your stake was not returned.';
+      var st=c.st||5,won=d>=st;
+      $('rt').textContent=won?'Session complete':'Session ended';$('rt').className=won?'win':'lose';
+      $('rm').textContent=won?'You got your '+st+' Karma back'+(d>st?' plus '+(d-st)+' Karma earned.':'.'):'Your stake was not returned.';
       balAfterStake=0;show('result')})});
 }
 function leave(why){
@@ -161,7 +162,7 @@ function leave(why){
     bal();balAfterStake=0;
     $('rt').textContent=early?'You left before the start':'You left the room';
     $('rt').className=early?'':'lose';
-    $('rm').textContent=(why?why+' ':'')+(early?'Your 10 Karma was returned.':'Your 10 Karma went to the students who finished.');
+    $('rm').textContent=(why?why+' ':'')+(early?'Your '+(c.st||5)+' Karma was returned.':'Your '+(c.st||5)+' Karma went to the students who finished.');
     show('result');
   });
 }

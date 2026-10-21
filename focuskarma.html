@@ -84,23 +84,23 @@ footer{padding:32px 0 48px;color:var(--mute);font-size:14px;border-top:1px solid
   <header class="hero">
     <div>
       <h1>Put your Karma on the line. Finish the session.</h1>
-      <p class="lead">Join a live 25 or 50 minute focus room with other students. Stake 10 Karma to get in. Stay focused and you win it back, plus a bonus from everyone who quit.</p>
+      <p class="lead">Join a live 25 or 50 minute focus room with other students. Stake 5 Karma to get in. Stay focused and you win it back, plus 1 Karma for finishing and a share of what everyone who quit lost.</p>
       <p class="lead" style="font-size:16px;margin:0">Try it on the right. The demo room lasts 20 seconds. Switch tabs and see what happens.</p>
       <p style="margin:22px 0 0"><a href="focuskarma_app.html" style="display:inline-block;background:var(--ink);color:var(--bg);text-decoration:none;font-weight:700;padding:14px 22px;border-radius:12px">Join a real room</a></p>
     </div>
 
     <div class="arena" id="arena" aria-live="polite">
       <h3>Demo focus room</h3>
-      <small>Demo only · stake 10 Karma</small>
+      <small>Demo only · stake 5 Karma</small>
       <div class="ring">
         <svg viewBox="0 0 200 200" aria-hidden="true"><circle class="track" cx="100" cy="100" r="90"/><circle class="prog" id="prog" cx="100" cy="100" r="90"/></svg>
         <div class="t"><div id="time">00:20</div><span id="state">Ready</span></div>
       </div>
       <div class="stats">
-        <div class="stat"><b id="bal">10</b><span>Your Karma</span></div>
+        <div class="stat"><b id="bal">5</b><span>Your Karma</span></div>
         <div class="stat"><b id="stk">0</b><span>Staked</span></div>
       </div>
-      <button id="go">Stake 10 Karma and start</button>
+      <button id="go">Stake 5 Karma and start</button>
       <button class="ghost" id="quit" hidden>Leave room</button>
       <p class="msg" id="msg">Demo only. No real Karma is used.</p>
     </div>
@@ -109,7 +109,7 @@ footer{padding:32px 0 48px;color:var(--mute);font-size:14px;border-top:1px solid
   <section id="how">
     <h2>How a session works</h2>
     <div class="steps">
-      <div class="step"><h3>Stake</h3><p>Pick a 25 or 50 minute room. Your 10 Karma goes into the room’s pool when you join.</p></div>
+      <div class="step"><h3>Stake</h3><p>Pick a 25 or 50 minute room. Your 5 Karma goes into the room’s pool when you join.</p></div>
       <div class="step"><h3>Focus</h3><p>Stay on the room tab. Everyone in the room is doing the same work alongside you.</p></div>
       <div class="step"><h3>Settle</h3><p>The timer ends. Finishers get their stake back plus a share of the Karma left by anyone who quit.</p></div>
     </div>
@@ -118,8 +118,8 @@ footer{padding:32px 0 48px;color:var(--mute);font-size:14px;border-top:1px solid
   <section>
     <h2>What you win, what you lose</h2>
     <div class="rules">
-      <div class="rule w"><h3>You finish</h3><ul><li>Your 10 Karma comes back</li><li>You get a bonus from the pool</li><li>The room sees you completed it</li></ul></div>
-      <div class="rule l"><h3>You leave early</h3><ul><li>Your 10 Karma is cut</li><li>It is split between students who finished</li><li>Switching tabs or leaving the room counts as leaving</li></ul></div>
+      <div class="rule w"><h3>You finish</h3><ul><li>Your 5 Karma comes back</li><li>You earn 1 Karma for finishing, plus a share of any forfeited stakes</li><li>The room sees you completed it</li></ul></div>
+      <div class="rule l"><h3>You leave early</h3><ul><li>Your 5 Karma is cut</li><li>It is split between students who finished</li><li>Switching tabs or leaving the room counts as leaving</li></ul></div>
     </div>
   </section>
 
@@ -152,24 +152,24 @@ footer{padding:32px 0 48px;color:var(--mute);font-size:14px;border-top:1px solid
   function setMsg(t,c){msg.textContent=t;msg.className='msg '+(c||'')}
   function start(){
     running=true;left=D;arena.className='arena';
-    bal.textContent='0';stk.textContent='10';state.textContent='Focusing';
+    bal.textContent='0';stk.textContent='5';state.textContent='Focusing';
     go.hidden=true;quit.hidden=false;prog.style.strokeDashoffset='0';
-    setMsg('10 Karma staked. Stay on this tab.');paint();
+    setMsg('5 Karma staked. Stay on this tab.');paint();
     tick=setInterval(function(){left--;paint();if(left<=0)win()},1000);
   }
   function stop(){running=false;clearInterval(tick);quit.hidden=true;go.hidden=false;stk.textContent='0'}
   function win(){
-    stop();arena.className='arena won';state.textContent='Done';bal.textContent='13';
+    stop();arena.className='arena won';state.textContent='Done';bal.textContent='6';
     go.textContent='Play again';
-    setMsg('Session complete. You got your 10 Karma back plus 3 bonus Karma.','win');
+    setMsg('Session complete. You got your 5 Karma back plus 1 Karma for finishing.','win');
   }
   function lose(why){
     if(!running)return;
     stop();arena.className='arena lost';state.textContent='Left early';bal.textContent='0';
     go.textContent='Try again';
-    setMsg(why+' Your 10 Karma went to the students who finished.','lose');
+    setMsg(why+' Your 5 Karma went to the students who finished.','lose');
   }
-  go.addEventListener('click',function(){bal.textContent='10';start()});
+  go.addEventListener('click',function(){bal.textContent='5';start()});
   quit.addEventListener('click',function(){lose('You left the room.')});
   document.addEventListener('visibilitychange',function(){if(document.hidden)lose('You switched tabs.')});
   paint();
