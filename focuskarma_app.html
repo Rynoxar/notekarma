@@ -100,6 +100,7 @@ sb.auth.getSession().then(function(r){
 $('goLogin').onclick=function(){location.href='./'};
 
 function rooms(){
+  sb.rpc('settle_due_rooms').then(function(){bal()});
   sb.rpc('room_list').then(function(r){
     var b=$('rooms');if(r.error){b.textContent='Could not load rooms.';return}
     if(!r.data.length){b.innerHTML='<p class="mute">No rooms yet. Start one below.</p>';return}
@@ -141,12 +142,16 @@ function tick(){
 function stop(){clearInterval(hb);clearInterval(tk);if(ch){try{sb.removeChannel(ch)}catch(e){}ch=null}var c=cur;cur=null;return c}
 function finish(){
   var c=stop();if(!c)return;$('tm').textContent='00:00';$('ph').textContent='Settling';
-  setTimeout(function(){sb.rpc('settle_room',{p_room:c.id}).then(function(r){
+  setTimeout(function(){settle(c,0)},1500);
+}
+function settle(c,tries){
+  sb.rpc('settle_room',{p_room:c.id}).then(function(r){
+    if(r.error&&r.error.message.indexOf('room_not_ended')>-1&&tries<10){setTimeout(function(){settle(c,tries+1)},2000);return}
     if(r.error)toast(r.error.message);
     bal().then(function(v){var d=v-balAfterStake;
       $('rt').textContent=d>=10?'Session complete':'Session ended';$('rt').className=d>=10?'win':'lose';
       $('rm').textContent=d>=10?'You got your 10 Karma back'+(d>10?' plus '+(d-10)+' bonus Karma.':'.'):'Your stake was not returned.';
-      balAfterStake=0;show('result')})})},2500);
+      balAfterStake=0;show('result')})});
 }
 function leave(why){
   var c=stop();if(!c)return;var early=new Date()<c.s;
