@@ -52,7 +52,7 @@ small,.mute{color:var(--mute)}
     <p class="mute" style="margin:0 0 6px">Stake 10 Karma. Finish the session to get it back plus a bonus. Leave after it starts and you lose it.</p>
     <div id="rooms"><p class="mute">Loading rooms…</p></div>
   </div>
-  <div class="card">
+  <div class="card" id="mkcard" hidden>
     <h2>Start a new room</h2>
     <div class="btns">
       <button id="mk25">25 min</button><button id="mk50">50 min</button>
@@ -95,6 +95,7 @@ function err(e){var m={not_enough_karma:'You need at least 10 Karma to join.',al
 sb.auth.getSession().then(function(r){
   if(!r.data.session){show('login');return}
   uid=r.data.session.user.id;bal();rooms();show('lobby');
+  sb.rpc('can_create_room').then(function(c){if(c.data===true)$('mkcard').hidden=false});
   poll=setInterval(function(){if(!cur)rooms()},15000);
 });
 $('goLogin').onclick=function(){location.href='./'};
